@@ -16,6 +16,8 @@ function initSupabase() {
         },
       },
     );
+    // Make it globally accessible for chat
+    window.supabaseClient = supabaseClient;
   }
   return supabaseClient;
 }
@@ -158,6 +160,14 @@ async function selectWorkspace(workspaceId) {
 
   document.getElementById("workspace-title").textContent =
     currentWorkspace.name;
+
+  // Update chat with workspace info
+  if (window.workspaceChat) {
+    window.workspaceChat.currentWorkspaceId = workspaceId;
+    window.workspaceChat.updateWorkspaceDisplay(currentWorkspace.name);
+    await window.workspaceChat.initializeSession();
+  }
+
   await loadWorkspaceCaptures();
   renderWorkspaces(); // Re-render to update active state
 }

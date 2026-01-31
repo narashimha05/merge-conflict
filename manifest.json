@@ -34,7 +34,13 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["db.js", "config.js", "auth.html"],
+      "resources": [
+        "db.js",
+        "config.js",
+        "auth.html",
+        "tesseract.min.js",
+        "tesseract-worker.min.js"
+      ],
       "matches": [
         "https://meet.google.com/*",
         "https://*.zoom.us/*",
