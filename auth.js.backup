@@ -1,6 +1,5 @@
 // Authentication Logic
 let supabaseClient = null;
-let supabaseReady = false;
 
 // Wait for Supabase to load
 window.addEventListener("supabase-ready", () => {
