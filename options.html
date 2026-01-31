@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Settings - Meet Slide Capture</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="options-container">
+      <div class="options-header">
+        <h1>Settings</h1>
+        <p>Configure how Meet Slide Capture works</p>
+      </div>
+
+      <div class="options-section">
+        <h2>Capture Settings</h2>
+        <div class="form-group">
+          <label for="interval">Check Interval (ms)</label>
+          <input id="interval" type="number" min="200" step="100" />
+          <div class="help-text">
+            How often to check for slide changes (default: 1000ms)
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="minPercent">Minimum Change %</label>
+          <input id="minPercent" type="number" min="1" max="100" />
+          <div class="help-text">
+            Percentage of screen change needed to trigger capture
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="ignorePercent">Ignore Threshold %</label>
+          <input id="ignorePercent" type="number" min="0" max="20" />
+          <div class="help-text">Ignore tiny changes like cursor movement</div>
+        </div>
+        <div class="form-group">
+          <label for="debounce">Debounce Time (seconds)</label>
+          <input id="debounce" type="number" min="0" />
+          <div class="help-text">Minimum time between captures</div>
+        </div>
+      </div>
+
+      <!-- <div class="options-section">
+        <h2>Advanced</h2>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input id="ocrEnabled" type="checkbox" />
+            <span>Enable OCR (experimental, uses more CPU)</span>
+          </label>
+        </div>
+      </div> -->
+
+      <div class="controls" style="margin-top: 20px">
+        <button class="btn btn-primary" id="save">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="16"
+            height="16"
+          >
+            <path
+              d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+            />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          Save Settings
+        </button>
+        <button class="btn btn-secondary" id="restore">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            width="16"
+            height="16"
+          >
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </svg>
+          Restore Defaults
+        </button>
+      </div>
+
+      <div id="msg" class="toast"></div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "Auto Capture",
+  "version": "1.6.0",
+  "manifest_version": 3,
+  "description": "Auto-capture slides from Google Meet, Zoom, and Microsoft Teams with robust detection, gallery, OCR export, and PDF export.",
+  "permissions": ["storage", "activeTab", "scripting", "notifications"],
+  "host_permissions": [
+    "https://meet.google.com/*",
+    "https://*.zoom.us/*",
+    "https://teams.microsoft.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/AutoCapture.png",
+      "48": "icons/AutoCapture.png",
+      "128": "icons/AutoCapture.png"
+    }
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://meet.google.com/*",
+        "https://*.zoom.us/*",
+        "https://teams.microsoft.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["db.js", "config.js", "auth.html"],
+      "matches": [
+        "https://meet.google.com/*",
+        "https://*.zoom.us/*",
+        "https://teams.microsoft.com/*",
+        "<all_urls>"
+      ]
+    }
+  ]
+}

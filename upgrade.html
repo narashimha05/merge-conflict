@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Upgrade to Pro - AutoCapture</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #f5f5f5;
+        padding: 40px 20px;
+        min-width: 500px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 48px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 32px;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+      }
+
+      .subtitle {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 32px;
+      }
+
+      .price {
+        font-size: 48px;
+        font-weight: 700;
+        color: #ff6b35;
+        margin-bottom: 8px;
+      }
+
+      .price span {
+        font-size: 24px;
+        color: #666;
+        font-weight: 400;
+      }
+
+      .features {
+        list-style: none;
+        margin: 32px 0;
+      }
+
+      .features li {
+        padding: 12px 0;
+        padding-left: 32px;
+        position: relative;
+        color: #333;
+        font-size: 16px;
+      }
+
+      .features li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #00b894;
+        font-weight: 700;
+        font-size: 20px;
+      }
+
+      .btn-upgrade {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+        font-family: "Inter", sans-serif;
+      }
+
+      .btn-upgrade:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+      }
+
+      .btn-secondary {
+        width: 100%;
+        padding: 14px;
+        background: transparent;
+        color: #666;
+        border: none;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 12px;
+        font-family: "Inter", sans-serif;
+      }
+
+      .btn-secondary:hover {
+        color: #ff6b35;
+      }
+
+      .comparison {
+        margin-top: 32px;
+        padding-top: 32px;
+        border-top: 2px solid #f0f0f0;
+      }
+
+      .comparison h3 {
+        font-size: 20px;
+        color: #1a1a1a;
+        margin-bottom: 20px;
+      }
+
+      .tier-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .tier-card {
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+      }
+
+      .tier-card.pro {
+        border-color: #ff6b35;
+        background: #fff5f2;
+      }
+
+      .tier-name {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      .tier-features {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.8;
+      }
+
+      /* Comparison Table Styles */
+      .comparison-table {
+        margin: 32px 0;
+        border-collapse: collapse;
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .comparison-table thead {
+        background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+        color: white;
+      }
+
+      .comparison-table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .comparison-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+      }
+
+      .comparison-table tbody tr:hover {
+        background: #fff8f5;
+      }
+
+      .comparison-table tbody tr:last-child {
+        border-bottom: none;
+      }
+
+      .comparison-table td {
+        padding: 14px 16px;
+        font-size: 14px;
+        color: #333;
+      }
+
+      .comparison-table td:first-child {
+        font-weight: 500;
+        color: #1a1a1a;
+      }
+
+      .comparison-table .check {
+        color: #00b894;
+        font-weight: 700;
+        font-size: 18px;
+      }
+
+      .comparison-table .cross {
+        color: #dfe6e9;
+        font-weight: 700;
+        font-size: 18px;
+      }
+
+      .table-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 16px;
+        margin-top: 32px;
+      }
+
+      .highlight-badge {
+        display: inline-block;
+        background: #fff5f2;
+        color: #ff6b35;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <span class="badge">Pro Feature</span>
+      <h1>Unlock Premium Features</h1>
+      <p class="subtitle">Get unlimited access to advanced capture tools</p>
+
+      <div class="price">$9<span>/month</span></div>
+
+      <!-- Feature Comparison Tables -->
+      <div class="table-title">Core Features</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th style="text-align: center">Free</th>
+            <th style="text-align: center; background: #e55a2b">Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Basic slide capture</td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Local storage</td>
+            <td style="text-align: center">
+              <span class="check">✓</span> (up to 10)
+            </td>
+            <td style="text-align: center">
+              <span class="check">✓</span> Unlimited
+            </td>
+          </tr>
+          <tr>
+            <td>Individual downloads</td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Download all as ZIP</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="table-title">
+        Advanced Features <span class="highlight-badge">PRO ONLY</span>
+      </div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th style="text-align: center">Free</th>
+            <th style="text-align: center; background: #e55a2b">Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Capture sensitivity adjustment</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Export as PDF</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Cloud sync across devices</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Customized workspace</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Unlimited cloud storage</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Priority support</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Early access to new features</td>
+            <td style="text-align: center"><span class="cross">✕</span></td>
+            <td style="text-align: center"><span class="check">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <button class="btn-upgrade" id="upgrade-btn" style="margin-top: 32px">
+        Upgrade to Pro - $9/month
+      </button>
+      <button class="btn-secondary" id="close-btn">Maybe later</button>
+
+      <p
+        style="
+          text-align: center;
+          margin-top: 20px;
+          font-size: 13px;
+          color: #666;
+        "
+      >
+        🔒 Secure payment powered by DodoPay
+      </p>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="dodopay-config.js"></script>
+    <script src="upgrade.js"></script>
+  </body>
+</html>

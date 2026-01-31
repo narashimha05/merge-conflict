@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoCapture - Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .auth-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 440px;
+        padding: 48px 40px;
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .logo-icon {
+        width: 64px;
+        height: 64px;
+        background: #ff6b35;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        color: #1a1a1a;
+        font-size: 28px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #666;
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      label {
+        display: block;
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: "Inter", sans-serif;
+        transition: border-color 0.2s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #ff6b35;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        background: #ff6b35;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: "Inter", sans-serif;
+      }
+
+      .btn:hover {
+        background: #e55a2b;
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .toggle-mode {
+        text-align: center;
+        margin-top: 24px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .toggle-link {
+        color: #ff6b35;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .toggle-link:hover {
+        text-decoration: underline;
+      }
+
+      .forgot-password {
+        text-align: right;
+        margin-bottom: 24px;
+      }
+
+      .forgot-link {
+        color: #ff6b35;
+        font-size: 14px;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .forgot-link:hover {
+        text-decoration: underline;
+      }
+
+      .error-message {
+        background: #ffe5e5;
+        color: #c41e3a;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .success-message {
+        background: #e5f7e5;
+        color: #2d7a2d;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="logo">
+        <div class="logo-icon">📸</div>
+        <h1 id="form-title">Welcome to AutoCapture</h1>
+        <p class="subtitle" id="form-subtitle">
+          Sign in to start capturing slides
+        </p>
+      </div>
+
+      <div class="error-message" id="error-message"></div>
+      <div class="success-message" id="success-message"></div>
+
+      <!-- Sign In Form -->
+      <form id="signin-form">
+        <div class="form-group">
+          <label for="signin-email">Email</label>
+          <input
+            type="email"
+            id="signin-email"
+            required
+            placeholder="you@example.com"
+          />
+        </div>
+        <div class="form-group">
+          <label for="signin-password">Password</label>
+          <input
+            type="password"
+            id="signin-password"
+            required
+            placeholder="••••••••"
+          />
+        </div>
+        <div class="forgot-password">
+          <a href="#" class="forgot-link" id="show-forgot">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn" id="signin-btn">Sign In</button>
+        <div class="toggle-mode">
+          Don't have an account?
+          <a href="#" class="toggle-link" id="show-signup">Sign up</a>
+        </div>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form id="signup-form" class="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="signup-firstname">First Name</label>
+            <input
+              type="text"
+              id="signup-firstname"
+              required
+              placeholder="John"
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-lastname">Last Name</label>
+            <input
+              type="text"
+              id="signup-lastname"
+              required
+              placeholder="Doe"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input
+            type="email"
+            id="signup-email"
+            required
+            placeholder="you@example.com"
+          />
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input
+            type="password"
+            id="signup-password"
+            required
+            placeholder="••••••••"
+            minlength="6"
+          />
+        </div>
+        <button type="submit" class="btn" id="signup-btn">
+          Create Account
+        </button>
+        <div class="toggle-mode">
+          Already have an account?
+          <a href="#" class="toggle-link" id="show-signin">Sign in</a>
+        </div>
+      </form>
+
+      <!-- Forgot Password Form -->
+      <form id="forgot-form" class="hidden">
+        <div class="form-group">
+          <label for="forgot-email">Email</label>
+          <input
+            type="email"
+            id="forgot-email"
+            required
+            placeholder="you@example.com"
+          />
+        </div>
+        <button type="submit" class="btn" id="forgot-btn">
+          Send Reset Link
+        </button>
+        <div class="toggle-mode">
+          <a href="#" class="toggle-link" id="back-to-signin"
+            >Back to sign in</a
+          >
+        </div>
+      </form>
+
+      <!-- Reset Password Form -->
+      <form id="reset-form" class="hidden">
+        <div class="form-group">
+          <label for="new-password">New Password</label>
+          <input
+            type="password"
+            id="new-password"
+            required
+            placeholder="••••••••"
+            minlength="6"
+          />
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <input
+            type="password"
+            id="confirm-password"
+            required
+            placeholder="••••••••"
+            minlength="6"
+          />
+        </div>
+        <button type="submit" class="btn" id="reset-btn">
+          Update Password
+        </button>
+      </form>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="supabase.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>
