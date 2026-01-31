@@ -14,7 +14,7 @@ function initSupabase() {
           persistSession: false, // Don't persist auth session (we manage it manually)
           storageKey: "workspace-auth", // Use different storage key
         },
-      }
+      },
     );
   }
   return supabaseClient;
@@ -54,18 +54,32 @@ function showToast(message) {
 async function loadWorkspaces() {
   try {
     const client = initSupabase();
+
+    // Set the session for authenticated requests
+    if (currentUser.session) {
+      await client.auth.setSession({
+        access_token: currentUser.session.access_token,
+        refresh_token: currentUser.session.refresh_token,
+      });
+    }
+
     const { data, error } = await client
       .from("workspaces")
       .select("*")
       .eq("user_id", currentUser.id)
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Load workspaces error:", error);
+      throw error;
+    }
 
     workspaces = data || [];
+    console.log("Loaded workspaces:", workspaces);
     renderWorkspaces();
   } catch (error) {
-    showToast("Failed to load workspaces");
+    console.error("Failed to load workspaces:", error);
+    showToast("Failed to load workspaces: " + error.message);
   }
 }
 
@@ -85,7 +99,7 @@ async function renderWorkspaces() {
 
   // Get capture counts for each workspace
   const counts = await Promise.all(
-    workspaces.map((w) => getWorkspaceCaptureCount(w.id))
+    workspaces.map((w) => getWorkspaceCaptureCount(w.id)),
   );
 
   list.innerHTML = workspaces
@@ -98,7 +112,7 @@ async function renderWorkspaces() {
       <div class="workspace-name">${workspace.name}</div>
       <div class="workspace-count">${counts[idx]}</div>
     </div>
-  `
+  `,
     )
     .join("");
 
@@ -115,6 +129,15 @@ async function renderWorkspaces() {
 async function getWorkspaceCaptureCount(workspaceId) {
   try {
     const client = initSupabase();
+
+    // Set the session for authenticated requests
+    if (currentUser && currentUser.session) {
+      await client.auth.setSession({
+        access_token: currentUser.session.access_token,
+        refresh_token: currentUser.session.refresh_token,
+      });
+    }
+
     const { count, error } = await client
       .from("workspace_captures")
       .select("*", { count: "exact", head: true })
@@ -123,6 +146,7 @@ async function getWorkspaceCaptureCount(workspaceId) {
     if (error) throw error;
     return count || 0;
   } catch (error) {
+    console.error("Get capture count error:", error);
     return 0;
   }
 }
@@ -155,7 +179,7 @@ async function loadWorkspaceCaptures() {
             <div class="skeleton-text"></div>
           </div>
         </div>
-      `
+      `,
         )
         .join("")}
     </div>
@@ -163,13 +187,25 @@ async function loadWorkspaceCaptures() {
 
   try {
     const client = initSupabase();
+
+    // Set the session for authenticated requests
+    if (currentUser && currentUser.session) {
+      await client.auth.setSession({
+        access_token: currentUser.session.access_token,
+        refresh_token: currentUser.session.refresh_token,
+      });
+    }
+
     const { data, error } = await client
       .from("workspace_captures")
       .select("*")
       .eq("workspace_id", currentWorkspace.id)
       .order("timestamp", { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Load captures error:", error);
+      throw error;
+    }
 
     const captures = data || [];
 
@@ -195,7 +231,7 @@ async function loadWorkspaceCaptures() {
             <img src="${capture.data_url}" alt="Slide ${idx + 1}">
             <div class="gallery-item-info">
               <span class="gallery-item-time">${new Date(
-                capture.timestamp
+                capture.timestamp,
               ).toLocaleString()}</span>
               <div class="gallery-item-actions">
                 <button class="icon-btn" onclick="downloadCapture('${
@@ -218,7 +254,7 @@ async function loadWorkspaceCaptures() {
               </div>
             </div>
           </div>
-        `
+        `,
           )
           .join("")}
       </div>
@@ -363,7 +399,7 @@ btnDelete.addEventListener("click", async () => {
 
   if (
     !confirm(
-      `Delete workspace "${currentWorkspace.name}" and all its captures?`
+      `Delete workspace "${currentWorkspace.name}" and all its captures?`,
     )
   )
     return;
