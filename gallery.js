@@ -318,10 +318,10 @@ async function initializeGallery(currentUser) {
       const selectedWorkspaceId = workspaceSelect.value;
       const newName = newWorkspaceName.value.trim();
 
-      if (!selectedWorkspaceId && !newName) {
-        showToast("Please select or create a workspace");
-        return;
-      }
+      // if (!selectedWorkspaceId && !newName) {
+      //   showToast("Please select or create a workspace");
+      //   return;
+      // }
 
       try {
         const supabaseClient = supabase.createClient(

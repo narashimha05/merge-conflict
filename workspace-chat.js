@@ -7,6 +7,7 @@ class WorkspaceChat {
     this.cerebrasApiKey = null;
     this.isProcessing = false;
     this.supabase = null;
+    this.uiInitialized = false; // Track if UI has been initialized
   }
 
   async init() {
@@ -22,22 +23,8 @@ class WorkspaceChat {
     // Initialize UI
     this.initializeUI();
 
-    // Only initialize session if workspace is selected
-    if (this.currentWorkspaceId) {
-      // Get workspace name if available
-      if (window.currentWorkspace) {
-        this.updateWorkspaceDisplay(window.currentWorkspace.name);
-      }
-
-      // Create or load current session
-      await this.initializeSession();
-    } else {
-      // Show helpful message
-      const subtitle = document.getElementById("chat-workspace-name");
-      if (subtitle) {
-        subtitle.textContent = "👈 Select a workspace from sidebar";
-      }
-    }
+    // Don't initialize session here - wait for workspace selection
+    // Session will be initialized when workspace is selected via selectWorkspace()
   }
 
   async loadSupabaseClient() {
@@ -106,6 +93,13 @@ class WorkspaceChat {
   }
 
   initializeUI() {
+    // Prevent duplicate initialization
+    if (this.uiInitialized) {
+      console.log("UI already initialized, skipping...");
+      return;
+    }
+    this.uiInitialized = true;
+
     // Chat button
     const chatBtn = document.getElementById("chat-float-btn");
     const chatPanel = document.getElementById("chat-panel");
@@ -114,7 +108,13 @@ class WorkspaceChat {
     const settingsBtn = document.getElementById("chat-settings-btn");
     const historyBtn = document.getElementById("chat-sessions-btn");
 
+    if (!chatBtn || !chatPanel) {
+      console.error("Chat UI elements not found");
+      return;
+    }
+
     chatBtn.addEventListener("click", () => {
+      console.log("Chat button clicked");
       chatPanel.classList.add("open");
       chatBtn.classList.add("hidden");
     });
@@ -132,7 +132,8 @@ class WorkspaceChat {
       this.openSettingsModal();
     });
 
-    historyBtn.addEventListener("click", () => {
+    historyBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent event bubbling
       this.openHistoryModal();
     });
 
@@ -180,7 +181,8 @@ class WorkspaceChat {
       document.getElementById("chatSettingsModal").style.display = "none";
     });
 
-    // History modal
+    // History modale) => {
+    e.stopPropagation(); // Prevent event bubbling
     const closeHistoryBtn = document.getElementById("btn-chat-history-close");
     const newChatBtn = document.getElementById("btn-chat-new-session");
 
@@ -188,8 +190,8 @@ class WorkspaceChat {
       document.getElementById("chat-history-modal").style.display = "none";
     });
 
-    newChatBtn.addEventListener("click", () => {
-      this.createNewSession();
+    newChatBtn.addEventListener("click", async () => {
+      await this.createNewSession();
     });
 
     // Close modals on outside click
@@ -234,6 +236,20 @@ class WorkspaceChat {
   async createNewSession() {
     if (!this.supabase) return;
 
+    // Check if workspace is selected
+    console.log("Creating new session for workspace:", this.currentWorkspaceId);
+    if (!this.currentWorkspaceId) {
+      console.error("Cannot create session: No workspace selected");
+      this.showError("Please select a workspace first.");
+      return;
+    }
+
+    // Close the history modal first
+    const historyModal = document.getElementById("chat-history-modal");
+    if (historyModal) {
+      historyModal.style.display = "none";
+    }
+
     // Get current user ID
     const {
       data: { user },
@@ -264,10 +280,12 @@ class WorkspaceChat {
       return;
     }
 
+    // Update current session and clear messages
     this.currentSessionId = session.id;
     this.messages = [];
     this.renderMessages();
-    document.getElementById("chat-history-modal").style.display = "none";
+
+    console.log("New session created:", session.id);
   }
 
   async loadMessages() {
@@ -343,11 +361,32 @@ class WorkspaceChat {
 
     if (!message || this.isProcessing) return;
 
+    console.log("Sending message:", message);
+    console.log("Supabase:", this.supabase);
+    console.log("Current Session ID:", this.currentSessionId);
+    console.log("Current Workspace ID:", this.currentWorkspaceId);
+
+    // Check if workspace is selected
+    // if (!this.currentWorkspaceId) {
+    //   this.showError("Please select a workspace first.");
+    //   return;
+    // }
+
     // Check if API key is set
     if (!this.cerebrasApiKey) {
       this.showError("Please set your Cerebras API key in settings first.");
       this.openSettingsModal();
       return;
+    }
+
+    // Check if session is initialized
+    if (!this.currentSessionId) {
+      console.log("No session, creating one...");
+      await this.createNewSession();
+      if (!this.currentSessionId) {
+        this.showError("Failed to create chat session.");
+        return;
+      }
     }
 
     input.value = "";
@@ -367,7 +406,11 @@ class WorkspaceChat {
   }
 
   async addMessage(role, content) {
-    if (!this.supabase || !this.currentSessionId) return;
+    if (!this.supabase || !this.currentSessionId) {
+      console.error("Cannot add message - missing supabase or session ID");
+      this.showError("Chat session not initialized. Please try again.");
+      return;
+    }
 
     // Get current user ID
     const {
@@ -377,8 +420,18 @@ class WorkspaceChat {
 
     if (userError || !user) {
       console.error("Error getting user:", userError);
+      this.showError(
+        "Failed to get user information. Please refresh the page.",
+      );
       return;
     }
+
+    console.log("Adding message to database:", {
+      role,
+      content,
+      user_id: user.id,
+      workspace_id: this.currentWorkspaceId,
+    });
 
     const { data: message, error } = await this.supabase
       .from("workspace_chats")
@@ -399,14 +452,15 @@ class WorkspaceChat {
       return;
     }
 
+    console.log("Message saved successfully:", message);
     this.messages.push(message);
     this.renderMessages();
   }
 
-  async getWorkspaceCapturesContext() {
+  async getWorkspaceCapturesContext(extractText = false) {
     if (!this.supabase || !this.currentWorkspaceId) {
       console.log("No supabase or workspace ID");
-      return { count: 0, timestamps: "", capturesText: "" };
+      return { count: 0, timestamps: "", captures: [] };
     }
 
     try {
@@ -425,7 +479,7 @@ class WorkspaceChat {
       if (error) {
         console.error("Error fetching captures:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
-        return { count: 0, timestamps: "", capturesText: "" };
+        return { count: 0, timestamps: "", captures: [] };
       }
 
       console.log("Captures found:", captures?.length || 0);
@@ -439,25 +493,10 @@ class WorkspaceChat {
           )
           .join(", ") || "";
 
-      // Extract text info from captures
-      let capturesText = "";
-      if (captures && captures.length > 0) {
-        // Try to extract text from each capture using OCR
-        const textPromises = captures.map(async (c, idx) => {
-          const extractedText = await this.extractTextFromCaptureSimple(
-            c.data_url,
-          );
-          return `=== SLIDE ${idx + 1} ===\n${extractedText}\n`;
-        });
-
-        const textResults = await Promise.all(textPromises);
-        capturesText = textResults.join("\n");
-      }
-
-      return { count, timestamps, capturesText };
+      return { count, timestamps, captures: captures || [] };
     } catch (error) {
       console.error("Error getting workspace context:", error);
-      return { count: 0, timestamps: "", capturesText: "" };
+      return { count: 0, timestamps: "", captures: [] };
     }
   }
 
@@ -465,8 +504,8 @@ class WorkspaceChat {
     this.isProcessing = true;
 
     try {
-      // Get workspace captures context with extracted text
-      const capturesContext = await this.getWorkspaceCapturesContext();
+      // Get workspace captures context (without OCR extraction)
+      const capturesContext = await this.getWorkspaceCapturesContext(false);
 
       // Build context from previous messages
       const conversationHistory = this.messages.slice(-10).map((msg) => ({
@@ -474,13 +513,15 @@ class WorkspaceChat {
         content: msg.message, // Use 'message' field from database
       }));
 
-      // Add system prompt with actual workspace context and extracted text
-      const systemPrompt = `You are a helpful AI assistant for a workspace management tool.
+      // Add system prompt with workspace context
+      let systemPrompt = `You are a helpful AI assistant for a workspace management tool.
 
 IMPORTANT: This workspace currently has ${capturesContext.count} captured slide(s).
-${capturesContext.count > 0 ? `\nCapture timestamps: ${capturesContext.timestamps}\n\n=== EXTRACTED SLIDE CONTENT ===\n${capturesContext.capturesText || "No text could be extracted from the slides."}\n\n=== END OF SLIDES ===\n\nYou can now analyze this content and answer questions about it. If the extracted text shows placeholder messages, acknowledge that full OCR text extraction requires additional processing.` : "\nThe workspace is empty - no slides have been captured yet."}
+${capturesContext.count > 0 ? `\nCapture timestamps: ${capturesContext.timestamps}` : "\nThe workspace is empty - no slides have been captured yet."}
 
-Provide helpful insights based on the actual slide information above.`;
+If users ask about slide content, inform them they can use the "Extract Text" button next to each slide to get OCR text extraction.
+
+Provide helpful insights based on the workspace information.`;
 
       const messages = [
         {
@@ -609,6 +650,14 @@ Provide helpful insights based on the actual slide information above.`;
 
     if (!this.supabase) return;
 
+    // Check if workspace is selected
+    console.log("Opening history for workspace:", this.currentWorkspaceId);
+    if (!this.currentWorkspaceId) {
+      console.error("Cannot open history: No workspace selected");
+      this.showError("Please select a workspace first.");
+      return;
+    }
+
     // Load all sessions for this workspace
     const { data: sessions, error } = await this.supabase
       .from("chat_sessions")
@@ -662,6 +711,7 @@ Provide helpful insights based on the actual slide information above.`;
 
   async loadSession(sessionId) {
     this.currentSessionId = sessionId;
+    this.messages = [];
     await this.loadMessages();
     document.getElementById("chat-history-modal").style.display = "none";
   }
@@ -673,6 +723,7 @@ Provide helpful insights based on the actual slide information above.`;
 
     if (!this.supabase) return;
 
+    // Delete the session
     const { error } = await this.supabase
       .from("chat_sessions")
       .delete()
@@ -684,85 +735,22 @@ Provide helpful insights based on the actual slide information above.`;
       return;
     }
 
-    // If deleted current session, create a new one
+    console.log("Session deleted:", sessionId);
+
+    // If deleted current session, clear it and create a new one
     if (sessionId === this.currentSessionId) {
-      await this.createNewSession();
+      this.currentSessionId = null;
+      this.messages = [];
+      this.renderMessages();
+
+      // Only create new session if workspace is selected
+      if (this.currentWorkspaceId) {
+        await this.createNewSession();
+      }
     }
 
-    // Refresh history modal
+    // Refresh history modal to reflect changes
     await this.openHistoryModal();
-  }
-
-  // Simple text extraction using Puter.js OCR (User-Pays model - no API key needed)
-  async extractTextFromCaptureSimple(imageDataUrl) {
-    try {
-      // Check if Puter is available
-      if (typeof puter === "undefined") {
-        console.warn("Puter.js not loaded");
-        return `[Slide image available - Puter.js OCR library not loaded]`;
-      }
-
-      console.log("Starting OCR with Puter.js...");
-
-      // Convert data URL to Blob
-      const response = await fetch(imageDataUrl);
-      const blob = await response.blob();
-
-      // Create File object from Blob
-      const file = new File([blob], "slide.png", { type: "image/png" });
-
-      // Use Puter's OCR functionality (user will be prompted to sign in if needed)
-      const result = await puter.ai.txt.fromImage(file);
-
-      console.log("OCR completed successfully");
-
-      // Clean up the extracted text
-      const cleanedText = result.trim();
-
-      if (!cleanedText || cleanedText.length < 5) {
-        return `[Image captured - No readable text detected in this slide]`;
-      }
-
-      return cleanedText;
-    } catch (error) {
-      console.error("Puter OCR error:", error);
-
-      // Check if user needs to authenticate
-      if (error.message?.includes("auth") || error.message?.includes("login")) {
-        return `[OCR requires Puter authentication - User needs to sign in to Puter to use free OCR]`;
-      }
-
-      return `[Image captured - OCR error: ${error.message}]`;
-    }
-  }
-
-  // OCR Text Extraction (requires Tesseract.js to be loaded)
-  async extractTextFromCapture(imageUrl) {
-    try {
-      if (typeof Tesseract === "undefined") {
-        console.warn("Tesseract.js not loaded, using simple extraction");
-        return await this.extractTextFromCaptureSimple(imageUrl);
-      }
-
-      this.showInfo("Extracting text from image...");
-
-      const {
-        data: { text },
-      } = await Tesseract.recognize(imageUrl, "eng", {
-        logger: (m) => {
-          if (m.status === "recognizing text") {
-            this.showInfo(`Extracting text: ${Math.round(m.progress * 100)}%`);
-          }
-        },
-      });
-
-      this.showSuccess("Text extracted successfully!");
-      return text;
-    } catch (error) {
-      console.error("OCR Error:", error);
-      this.showError("Failed to extract text from image");
-      return null;
-    }
   }
 
   async analyzeCapture(captureId) {

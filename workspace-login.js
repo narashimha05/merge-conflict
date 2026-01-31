@@ -11,11 +11,21 @@ function initSupabase() {
           persistSession: false, // Don't persist auth session (we manage it manually)
           storageKey: "workspace-auth", // Use different storage key
         },
-      }
+      },
     );
   }
   return supabaseClient;
 }
+
+// Check if user is already logged in
+chrome.storage.local.get(["workspace_user"], (result) => {
+  if (result.workspace_user && result.workspace_user.session) {
+    // User is already logged in, redirect to workspace
+    console.log("User already logged in, redirecting to workspace");
+    window.location.href = "workspace.html";
+    return;
+  }
+});
 
 const loginForm = document.getElementById("login-form");
 const loginBtn = document.getElementById("login-btn");

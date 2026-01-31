@@ -164,6 +164,7 @@ async function selectWorkspace(workspaceId) {
   // Update chat with workspace info
   if (window.workspaceChat) {
     window.workspaceChat.currentWorkspaceId = workspaceId;
+    window.workspaceChat.supabase = supabaseClient; // Ensure supabase is set
     window.workspaceChat.updateWorkspaceDisplay(currentWorkspace.name);
     await window.workspaceChat.initializeSession();
   }
@@ -244,18 +245,23 @@ async function loadWorkspaceCaptures() {
                 capture.timestamp,
               ).toLocaleString()}</span>
               <div class="gallery-item-actions">
-                <button class="icon-btn" onclick="downloadCapture('${
-                  capture.data_url
-                }', ${capture.id})" title="Download">
+                <button class="icon-btn btn-extract-text" data-image="${capture.data_url}" data-id="${capture.id}" title="Extract Text (OCR)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                </button>
+                <button class="icon-btn btn-download-capture" data-image="${capture.data_url}" data-id="${capture.id}" title="Download">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                 </button>
-                <button class="icon-btn" onclick="deleteWorkspaceCapture(${
-                  capture.id
-                })" title="Delete">
+                <button class="icon-btn btn-delete-capture" data-id="${capture.id}" title="Delete">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -275,7 +281,7 @@ async function loadWorkspaceCaptures() {
 }
 
 // Download single capture
-window.downloadCapture = function (dataUrl, captureId) {
+function downloadCapture(dataUrl, captureId) {
   const link = document.createElement("a");
   link.href = dataUrl;
   link.download = `capture-${captureId}-${Date.now()}.png`;
@@ -283,10 +289,125 @@ window.downloadCapture = function (dataUrl, captureId) {
   link.click();
   document.body.removeChild(link);
   showToast("Download started");
-};
+}
+
+// Extract text from capture using OCR.space API
+async function extractTextFromCapture(dataUrl, captureId) {
+  try {
+    showToast("Extracting text from image...");
+
+    const OCR_API_KEY = "K89171548388957";
+    const OCR_API_URL = "https://api.ocr.space/parse/image";
+
+    // Prepare form data for OCR.space API
+    const formData = new FormData();
+    formData.append("base64Image", dataUrl);
+    formData.append("language", "eng");
+    formData.append("isOverlayRequired", "false");
+    formData.append("detectOrientation", "true");
+    formData.append("scale", "true");
+    formData.append("OCREngine", "2");
+
+    // Call OCR.space API
+    const response = await fetch(OCR_API_URL, {
+      method: "POST",
+      headers: {
+        apikey: OCR_API_KEY,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`OCR API error: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.IsErroredOnProcessing) {
+      throw new Error(result.ErrorMessage || "OCR processing failed");
+    }
+
+    if (result.ParsedResults && result.ParsedResults.length > 0) {
+      const extractedText = result.ParsedResults[0].ParsedText;
+
+      if (!extractedText || extractedText.trim().length === 0) {
+        showToast("No text detected in this image");
+        return;
+      }
+
+      // Show extracted text in a modal with copy button
+      showExtractedTextModal(extractedText.trim(), captureId);
+    } else {
+      showToast("No text could be extracted");
+    }
+  } catch (error) {
+    console.error("OCR error:", error);
+    showToast(`OCR failed: ${error.message}`);
+  }
+}
+
+// Show extracted text modal
+function showExtractedTextModal(text, captureId) {
+  // Create modal if it doesn't exist
+  let modal = document.getElementById("ocr-text-modal");
+
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "ocr-text-modal";
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2>Extracted Text - Slide ${captureId}</h2>
+          <button class="icon-btn btn-close-ocr-modal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <textarea id="ocr-extracted-text" readonly style="width: 100%; min-height: 300px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #e0e0e0; margin-top: 20px;">
+          <button class="btn-secondary btn-close-ocr-modal" style="padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Close</button>
+          <button class="btn-primary btn-copy-text" style="padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy Text
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // Set the text and show modal
+  document.getElementById("ocr-extracted-text").value = text;
+  modal.style.display = "flex";
+  showToast("Text extraction complete!");
+}
+
+// Close OCR modal
+function closeOCRModal() {
+  const modal = document.getElementById("ocr-text-modal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+// Copy extracted text to clipboard
+function copyExtractedText() {
+  const textarea = document.getElementById("ocr-extracted-text");
+  textarea.select();
+  document.execCommand("copy");
+  showToast("Text copied to clipboard!");
+}
 
 // Delete workspace capture
-window.deleteWorkspaceCapture = async function (captureId) {
+async function deleteWorkspaceCapture(captureId) {
   if (!confirm("Delete this capture?")) return;
 
   try {
@@ -304,7 +425,7 @@ window.deleteWorkspaceCapture = async function (captureId) {
   } catch (error) {
     showToast("Failed to delete capture");
   }
-};
+}
 
 // New Workspace Modal
 const newWorkspaceModal = document.getElementById("new-workspace-modal");
@@ -511,5 +632,57 @@ btnDownload.addEventListener("click", async () => {
     showToast("Download started");
   } catch (error) {
     showToast("Failed to download workspace");
+  }
+});
+
+// Initialize AI Chat after page loads
+// Initialize AI Chat after DOM is fully loaded
+document.addEventListener("DOMContentLoaded", async () => {
+  // Wait for all scripts to load
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  if (typeof WorkspaceChat !== "undefined") {
+    console.log("Initializing WorkspaceChat...");
+    window.workspaceChat = new WorkspaceChat();
+    await window.workspaceChat.init();
+    console.log("WorkspaceChat initialized");
+  } else {
+    console.error("WorkspaceChat class not loaded");
+  }
+});
+
+// Event delegation for dynamically created buttons
+document.addEventListener("click", (e) => {
+  // Extract text button
+  if (e.target.closest(".btn-extract-text")) {
+    const btn = e.target.closest(".btn-extract-text");
+    const dataUrl = btn.dataset.image;
+    const captureId = btn.dataset.id;
+    extractTextFromCapture(dataUrl, parseInt(captureId));
+  }
+
+  // Download capture button
+  if (e.target.closest(".btn-download-capture")) {
+    const btn = e.target.closest(".btn-download-capture");
+    const dataUrl = btn.dataset.image;
+    const captureId = btn.dataset.id;
+    downloadCapture(dataUrl, parseInt(captureId));
+  }
+
+  // Delete capture button
+  if (e.target.closest(".btn-delete-capture")) {
+    const btn = e.target.closest(".btn-delete-capture");
+    const captureId = btn.dataset.id;
+    deleteWorkspaceCapture(parseInt(captureId));
+  }
+
+  // Close OCR modal button
+  if (e.target.closest(".btn-close-ocr-modal")) {
+    closeOCRModal();
+  }
+
+  // Copy text button
+  if (e.target.closest(".btn-copy-text")) {
+    copyExtractedText();
   }
 });
