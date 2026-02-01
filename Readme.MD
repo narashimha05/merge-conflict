@@ -5,7 +5,14 @@ I built this because, as a student, I attend Google Meet classes almost every da
 
 Autocapture handles that problem automatically and even helps you understand the content using OCR and AI.
 
+## Setup & Usage
 
+- Fork the repository and clone it to your local machine.
+- Open your browser’s extensions page (Chrome / Microsoft Edge).
+- Enable Developer Mode.
+- Click Load Unpacked and select the project folder.
+- Open the Autocapture extension from the extensions menu.
+- Create an account by signing up and start using the extension.
 
 ## Why I Built This
 
