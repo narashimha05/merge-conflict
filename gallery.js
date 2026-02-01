@@ -31,9 +31,11 @@ async function initializeGallery(currentUser) {
   userAvatar.textContent = firstInitial;
   userName.textContent =
     currentUser.first_name || currentUser.email.split("@")[0];
-  // All users are on the free plan with full feature access
-  userTier.textContent = "Free";
-  userTier.className = "user-tier free";
+  // All users have full feature access
+  if (userTier) {
+    userTier.textContent = "";
+    userTier.className = "user-tier";
+  }
 
   // Show Workspace and Sync buttons for all users
   const btnSyncWorkspace = document.getElementById("btn-sync-workspace");
@@ -72,7 +74,7 @@ async function initializeGallery(currentUser) {
             } else {
               reject(new Error(response?.error || "Delete failed"));
             }
-          }
+          },
         );
       });
       showToast("Capture deleted");
@@ -220,7 +222,7 @@ async function initializeGallery(currentUser) {
           setTimeout(() => {
             window.open(
               chrome.runtime.getURL("workspace-login.html"),
-              "_blank"
+              "_blank",
             );
           }, 1000);
           return;
@@ -257,7 +259,7 @@ async function initializeGallery(currentUser) {
             persistSession: false,
             storageKey: "workspace-auth",
           },
-        }
+        },
       );
 
       // Set the session for the workspace user
@@ -298,7 +300,7 @@ async function initializeGallery(currentUser) {
     } catch (error) {
       console.error("Failed to load workspaces:", error);
       showToast(
-        "Failed to load workspaces: " + (error.message || "Unknown error")
+        "Failed to load workspaces: " + (error.message || "Unknown error"),
       );
     }
   }
@@ -332,7 +334,7 @@ async function initializeGallery(currentUser) {
               persistSession: false,
               storageKey: "workspace-auth",
             },
-          }
+          },
         );
 
         // Set the session for the workspace user
@@ -391,7 +393,7 @@ async function initializeGallery(currentUser) {
         setTimeout(() => {
           if (
             confirm(
-              `Sync successful! Clear local captures?\n\nThis will free up local storage while keeping your captures in the cloud workspace.`
+              `Sync successful! Clear local captures?\n\nThis will free up local storage while keeping your captures in the cloud workspace.`,
             )
           ) {
             chrome.runtime.sendMessage(
@@ -403,7 +405,7 @@ async function initializeGallery(currentUser) {
                 } else {
                   showToast("Failed to clear local captures");
                 }
-              }
+              },
             );
           }
         }, 500);
@@ -456,7 +458,7 @@ async function initializeGallery(currentUser) {
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
         const filename = `slide-${String(i + 1).padStart(3, "0")}-${new Date(
-          item.ts
+          item.ts,
         )
           .toISOString()
           .replace(/[:.]/g, "-")}.png`;
@@ -516,7 +518,7 @@ async function initializeGallery(currentUser) {
             const item = list[i];
             const filename = `slide-${String(i + 1).padStart(
               3,
-              "0"
+              "0",
             )}-${new Date(item.ts).toISOString().replace(/[:.]/g, "-")}.png`;
             downloadImage(item.dataUrl, filename);
           }, i * 300);

@@ -54,8 +54,8 @@ function initializePopup(user) {
   userAvatar.textContent = firstInitial;
   userName.textContent = user.first_name || user.email.split("@")[0];
   // All users are on the free plan with full access
-  userTier.textContent = "Free";
-  userTier.className = "user-tier free";
+  // userTier.textContent = "Free";
+  // userTier.className = "user-tier free";
 
   // Setup account details toggle
   setupSubscriptionDetails(user);
@@ -345,7 +345,7 @@ function setupSubscriptionDetails(user) {
   });
 
   // Populate static account details (no subscription or billing)
-  planType.textContent = "Free (all features included)";
+  // planType.textContent = "Free (all features included)";
   document.getElementById("status-row").style.display = "none";
   document.getElementById("next-billing-row").style.display = "none";
   document.getElementById("started-row").style.display = "none";
