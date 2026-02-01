@@ -181,8 +181,7 @@ class WorkspaceChat {
       document.getElementById("chatSettingsModal").style.display = "none";
     });
 
-    // History modale) => {
-    e.stopPropagation(); // Prevent event bubbling
+    // History modal event listeners
     const closeHistoryBtn = document.getElementById("btn-chat-history-close");
     const newChatBtn = document.getElementById("btn-chat-new-session");
 
@@ -274,11 +273,11 @@ class WorkspaceChat {
       .select()
       .single();
 
-    if (error) {
-      console.error("Error creating session:", error);
-      this.showError(`Failed to create chat session: ${error.message}`);
-      return;
-    }
+    // if (error) {
+    //   console.error("Error creating session:", error);
+    //   this.showError(`Failed to create chat session: ${error.message}`);
+    //   return;
+    // }
 
     // Update current session and clear messages
     this.currentSessionId = session.id;
@@ -380,14 +379,14 @@ class WorkspaceChat {
     }
 
     // Check if session is initialized
-    if (!this.currentSessionId) {
-      console.log("No session, creating one...");
-      await this.createNewSession();
-      if (!this.currentSessionId) {
-        this.showError("Failed to create chat session.");
-        return;
-      }
-    }
+    // if (!this.currentSessionId) {
+    //   console.log("No session, creating one...");
+    //   await this.createNewSession();
+    //   if (!this.currentSessionId) {
+    //     this.showError("Failed to create chat session.");
+    //     return;
+    //   }
+    // }
 
     input.value = "";
     input.style.height = "auto";
